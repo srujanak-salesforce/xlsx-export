@@ -1,20 +1,20 @@
 const ExcelJS = require('exceljs');
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 
 const app = express();
-app.use(express.json({ limit: '100mb' })); // safe for 40k+ rows
+app.use(express.json({ limit: '100mb' }));
 
 let workbook;
 let worksheet;
 let exportFilePath;
 
+// ===================== APPEND =====================
 app.post('/append', async (req, res) => {
   try {
     if (!workbook) {
       const fileName = `Accounts_Export_${Date.now()}.xlsx`;
-      exportFilePath = path.join('/tmp', fileName); // ✅ REQUIRED for Render
+      exportFilePath = path.join('/tmp', fileName);
 
       workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
         filename: exportFilePath,
@@ -44,12 +44,12 @@ app.post('/append', async (req, res) => {
   }
 });
 
+// ===================== FINALIZE =====================
 app.post('/finalize', async (req, res) => {
   try {
     worksheet.commit();
     await workbook.commit();
 
-    // reset memory
     workbook = null;
     worksheet = null;
 
@@ -62,6 +62,7 @@ app.post('/finalize', async (req, res) => {
   }
 });
 
+// ===================== DOWNLOAD =====================
 app.get('/download', (req, res) => {
   res.download(exportFilePath);
 });
