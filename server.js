@@ -10,10 +10,7 @@ let worksheet;
 app.post('/append', (req, res) => {
 
   if (!workbook) {
-    workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-      useStyles: true,
-      useSharedStrings: true
-    });
+    workbook = new ExcelJS.Workbook();   // ✅ NOT streaming
     worksheet = workbook.addWorksheet('Accounts');
   }
 
@@ -27,16 +24,24 @@ app.post('/append', (req, res) => {
     }));
   }
 
-  rows.forEach(r => worksheet.addRow(r).commit());
+  rows.forEach(r => worksheet.addRow(r));
+
   res.sendStatus(200);
 });
 
 app.post('/finalize', async (req, res) => {
-  await workbook.commit();
-  const buffer = await workbook.xlsx.writeBuffer();
-  res.json({ base64: Buffer.from(buffer).toString('base64') });
+
+  const buffer = await workbook.xlsx.writeBuffer(); // ✅ VALID NOW
+
+  // cleanup
+  workbook = null;
+  worksheet = null;
+
+  res.json({
+    base64: Buffer.from(buffer).toString('base64')
+  });
 });
 
 app.listen(process.env.PORT || 3000, () =>
-  console.log('✅ XLSX streaming service ready')
+  console.log('✅ XLSX service ready')
 );
