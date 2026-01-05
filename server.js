@@ -1,5 +1,6 @@
 const ExcelJS = require('exceljs');
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 
 const app = express();
@@ -9,7 +10,7 @@ let workbook;
 let worksheet;
 let exportFilePath;
 
-// ===================== APPEND =====================
+// ================= APPEND =================
 app.post('/append', async (req, res) => {
   try {
     if (!workbook) {
@@ -39,12 +40,12 @@ app.post('/append', async (req, res) => {
 
     res.sendStatus(200);
   } catch (e) {
-    console.error('Append error', e);
+    console.error('Append error:', e);
     res.status(500).send(e.message);
   }
 });
 
-// ===================== FINALIZE =====================
+// ================= FINALIZE =================
 app.post('/finalize', async (req, res) => {
   try {
     worksheet.commit();
@@ -53,21 +54,19 @@ app.post('/finalize', async (req, res) => {
     workbook = null;
     worksheet = null;
 
-    res.json({
-      downloadUrl: `https://xlsx-export.onrender.com/download`
-    });
+    res.json({ status: 'OK' });
   } catch (e) {
-    console.error('Finalize error', e);
+    console.error('Finalize error:', e);
     res.status(500).send(e.message);
   }
 });
 
-// ===================== DOWNLOAD =====================
+// ================= DOWNLOAD =================
 app.get('/download', (req, res) => {
   res.download(exportFilePath);
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
-  console.log(`✅ XLSX Streaming Export Service running on port ${PORT}`)
+  console.log(`✅ XLSX Export Service running on ${PORT}`)
 );
