@@ -11,15 +11,19 @@ app.post('/append', (req, res) => {
 
   if (!workbook) {
     workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-      filename: 'Accounts_Ancillary_Export.xlsx'
+      useStyles: true,
+      useSharedStrings: true
     });
     worksheet = workbook.addWorksheet('Accounts');
   }
 
   const rows = req.body;
+
   if (!worksheet.columns && rows.length) {
     worksheet.columns = Object.keys(rows[0]).map(k => ({
-      header: k, key: k, width: 25
+      header: k,
+      key: k,
+      width: 25
     }));
   }
 
@@ -29,9 +33,10 @@ app.post('/append', (req, res) => {
 
 app.post('/finalize', async (req, res) => {
   await workbook.commit();
-  workbook = null;
-  worksheet = null;
-  res.sendStatus(200);
+  const buffer = await workbook.xlsx.writeBuffer();
+  res.json({ base64: Buffer.from(buffer).toString('base64') });
 });
 
-app.listen(3000, () => console.log('✅ XLSX streaming service ready'));
+app.listen(process.env.PORT || 3000, () =>
+  console.log('✅ XLSX streaming service ready')
+);
