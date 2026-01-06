@@ -15,7 +15,7 @@ app.post('/append', async (req, res) => {
   try {
     if (!workbook) {
       const fileName = `Accounts_Export_${Date.now()}.xlsx`;
-      exportFilePath = path.join('/tmp', fileName);
+      exportFilePath = path.join('/tmp', fileName); // ✅ Render-safe
 
       workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
         filename: exportFilePath,
@@ -54,16 +54,13 @@ app.post('/finalize', async (req, res) => {
     workbook = null;
     worksheet = null;
 
+    // 🔥 DO NOT RETURN URL
     res.json({ status: 'OK' });
+
   } catch (e) {
     console.error('Finalize error:', e);
     res.status(500).send(e.message);
   }
-});
-
-// ================= DOWNLOAD =================
-app.get('/download', (req, res) => {
-  res.download(exportFilePath);
 });
 
 const PORT = process.env.PORT || 3000;
